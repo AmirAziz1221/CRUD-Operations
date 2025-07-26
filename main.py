@@ -103,69 +103,63 @@
 #     return {"db_connection": db.connection, "message": "Items fetched successfully"}
 
 
-# # JWT Authentication (Placeholder)
-# import jwt
-# from datetime import datetime, timedelta
-# from fastapi import Security
-# from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
-# SECRET_KEY = "your_secret_key"
-# ALGORITHM = "HS256"
-# ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# # Create JWT token
-# def create_jwt_token(data:dict):
-#     to_encode = data.copy()
-#     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-#     to_encode.update({"exp": expire})
-#     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-#     return encoded_jwt
-
-# # Verify JWT token
-# def verify_jwt_token(token: str):
-#     try:
-#         decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-#         return decoded_token if decoded_token["exp"] >= datetime.utcnow() else None
-#     except jwt.PyJWTError:
-#         return None
-    
-# # implementing JWT authentication
-# fake_users_db = {
-#     "Johndoe": { "username": "johndoe", "password": "secretpassword"}
-# }
-
-# #login model
-# class Login(BaseModel):
-#     username: str
-#     password: str
-
-# # JWT Bearer Security
-# @app.post("/login", tags=["Authentication"])
-# async def login(user: Login):
-#     db_user = fake_users_db.get(user.username)
-#     if not db_user or db_user["password"] != user.password:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
-#     token_data = {"sub": user.username}
-#     token = create_jwt_token(token_data)
-#     return {"access_token": token, "token_type": "bearer"}
-
-
-from fastapi import FastAPI, Depends, HTTPException, status
+import jwt
+from datetime import datetime, timedelta
+from fastapi import FastAPI, HTTPException, status, Depends, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 
 app = FastAPI()
 
-# Dummy user database for demonstration
+# Secret and algorithm
+SECRET_KEY = "your_secret_key"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Fake user DB
 fake_users_db = {
-    "johndoe": {"username": "string", "password": "string"}
+    "johndoe": {"username": "johndoe", "password": "secretpassword"}
 }
 
-# Login Model
+# Model for login
 class Login(BaseModel):
     username: str
     password: str
 
-@app.post("/login")
+# Create JWT token
+def create_jwt_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# Verify JWT token
+def verify_jwt_token(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+
+# JWT Bearer dependency
+security = HTTPBearer()
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
+    token = credentials.credentials
+    payload = verify_jwt_token(token)
+    return payload
+
+# Login route
+@app.post("/login", tags=["Authentication"])
 async def login(user: Login):
     db_user = fake_users_db.get(user.username)
     if not db_user or db_user["password"] != user.password:
@@ -175,5 +169,10 @@ async def login(user: Login):
         )
     
     token_data = {"sub": user.username}
-    token = create_jwt_token(data=token_data)
+    token = create_jwt_token(token_data)
     return {"access_token": token, "token_type": "bearer"}
+
+# Protected route
+@app.get("/protected", tags=["Protected"])
+async def protected_route(current_user: dict = Depends(get_current_user)):
+    return {"message": f"Hello, {current_user['sub']}! You are authenticated."}
