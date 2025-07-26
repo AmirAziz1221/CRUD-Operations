@@ -157,7 +157,7 @@ app = FastAPI()
 
 # Dummy user database for demonstration
 fake_users_db = {
-    "johndoe": {"username": "johndoe", "password": "secretpassword"}
+    "johndoe": {"username": "string", "password": "string"}
 }
 
 # Login Model
