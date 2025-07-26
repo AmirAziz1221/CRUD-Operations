@@ -134,7 +134,10 @@ fake_users_db = {
     "Johndoe": { "username": "johndoe", "password": "secretpassword"}
 }
 
-
+#login model
+class Login(BaseModel):
+    username: str
+    password: str
 
 # JWT Bearer Security
 @app.post("/login", tags=["Authentication"])
