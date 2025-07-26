@@ -139,6 +139,7 @@ class Login(BaseModel):
     username: str
     password: str
 
+# JWT Bearer Security
 @app.post("/login", tags=["Authentication"])
 async def login(user: Login):
     db_user = fake_users_db.get(user.username)
