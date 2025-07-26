@@ -128,3 +128,20 @@ def verify_jwt_token(token: str):
         return decoded_token if decoded_token["exp"] >= datetime.utcnow() else None
     except jwt.PyJWTError:
         return None
+    
+# implementing JWT authentication
+fake_users_db = {
+    "Johndoe": { "username": "johndoe", "password": "secretpassword"}
+}
+
+#login model
+class Login(BaseModel):
+    username: str
+    password: str
+
+@app.post("/login", tags=["Authentication"])
+async def login(user: Login):
+    db_user = fake_users_db.get(user.username)
+    if not db_user or db_user["password"] != user.password:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
+    token
