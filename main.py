@@ -140,11 +140,3 @@ class Login(BaseModel):
     password: str
 
 # JWT Bearer Security
-@app.post("/login", tags=["Authentication"])
-async def login(user: Login):
-    db_user = fake_users_db.get(user.username)
-    if not db_user or db_user["password"] != user.password:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
-    token_data = {"sub": user.username}
-    token = create_jwt_token(token_data)
-    return {"access_token": token, "token_type": "bearer"}
