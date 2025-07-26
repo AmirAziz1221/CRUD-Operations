@@ -98,6 +98,3 @@ async def get_db():
     finally:
         db.close()
 
-@app.get("/items/", tags = ["FakeDB"])
-async def read_items(db: FackeDBSession = Depends(get_db)):
-    return {"db_connection": db.connection, "message": "Items fetched successfully"}
