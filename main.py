@@ -181,8 +181,3 @@ async def protected_route(current_user: dict = Depends(get_current_user)):
     return {"message": f"Hello, {current_user['sub']}! You are authenticated as {current_user['role']}."}
 
 # Admin-only route
-@app.get("/admin", tags=["Admin"])
-async def admin_route(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden")
-    return {"message": "Welcome, admin!"}
