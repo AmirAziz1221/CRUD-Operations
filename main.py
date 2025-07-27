@@ -111,7 +111,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # Secret and algorithm
-SECRET_KEY = "your_secret_key"
+SECRET_KEY = "123"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
